@@ -25,7 +25,7 @@ def signup(request):
             raise Exception(serializer.errors)
 
     except Exception as e:
-        return Response(e, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
     
 
 @api_view(['POST'])
@@ -44,7 +44,7 @@ def login(request):
             raise Exception('Invalid Credentials !!')
 
     except Exception as e:
-        return Response(e, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
 @api_view(['GET'])
@@ -64,7 +64,7 @@ def find_user(request):
             raise Exception('User Not found')
     
     except Exception as e:
-        return Response(e, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 @api_view(['GET'])
 def find_all_users(request):
@@ -79,7 +79,7 @@ def find_all_users(request):
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
     except Exception as e:
-        return Response(e, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
     
 
 @api_view(['DELETE'])
@@ -96,10 +96,10 @@ def delete_user(request):
             user.delete()
             return Response('User Deleted', status=status.HTTP_204_NO_CONTENT)
         else:
-            raise Exception('User Not Found')
+            raise Exception('User Not Found to be deleted')
     
     except Exception as e:
-        return Response(e, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
 @api_view(['PUT'])
@@ -123,4 +123,4 @@ def update_user(request):
             raise Exception('No User found to be updated')
     
     except Exception as e:
-        return Response(e, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)

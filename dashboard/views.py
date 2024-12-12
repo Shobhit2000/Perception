@@ -13,7 +13,7 @@ def create_dashboard(request):
         json: json response stating whether the data was inserted or if there was an error
     """
     try:
-        dashboard = Dashboard.objects.filter(id=request.data.get('id'), 
+        dashboard = Dashboard.objects.filter(id=request.data.get('user_id'), 
                                              name=request.data.get('name')).first()
         if dashboard:
             return Response('Dashboard with the same name already exists, please provide another name', status=status.HTTP_409_CONFLICT)
@@ -26,7 +26,7 @@ def create_dashboard(request):
             raise Exception(serializer.errors)
 
     except Exception as e:
-        return Response(e, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
     
 
 @api_view(['GET'])
@@ -47,7 +47,7 @@ def find_dashboard(request):
             raise Exception('No Dashboard with this name found')
 
     except Exception as e:
-        return Response(e, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
 @api_view(['GET'])
@@ -64,7 +64,7 @@ def find_all_dashboards(request):
         return Response(serializer.data)
 
     except Exception as e:
-        return Response(e, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
     
 
 @api_view(['DELETE'])
@@ -84,7 +84,7 @@ def delete_dashboard(request):
             raise Exception('No Dashboard found to delete')
 
     except Exception as e:
-        return Response(e, status=status.HTTP_422_UNPROCESSABLE_ENTITY)    
+        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)    
 
 
 @api_view(['DELETE'])
@@ -104,7 +104,7 @@ def delete_all_dashboards(request):
             raise Exception('No Dashboards found for this user to delete')
 
     except Exception as e:
-        return Response(e, status=status.HTTP_422_UNPROCESSABLE_ENTITY)   
+        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)   
 
 
 @api_view(['PUT'])
@@ -129,4 +129,4 @@ def update_dashboard(request):
             raise Exception('No Dashboard found to be updated')
     
     except Exception as e:
-        return Response(e, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)

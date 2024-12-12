@@ -1,9 +1,10 @@
 from django.db import models
 from django.utils import timezone
+from chats.models import Chats
 
 # Create your models here.
 class Chatlines(models.Model):
-    chat_id = models.IntegerField()
+    chat = models.ForeignKey(Chats, on_delete=models.CASCADE)
     role = models.CharField(max_length=100)
     csv_file_path = models.CharField(max_length=1000)
     chat_text_backend = models.CharField(max_length=10000)

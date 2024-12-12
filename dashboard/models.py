@@ -1,9 +1,10 @@
 from django.db import models
 from django.utils import timezone
 from datetime import datetime
+from user.models import User
 
 class Dashboard(models.Model):
-    user_id = models.CharField(max_length=100)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     creation_tms = models.DateTimeField(editable=False, default=datetime.now())
     last_update_tms = models.DateTimeField(default=datetime.now())
