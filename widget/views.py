@@ -1,6 +1,11 @@
-# from django.shortcuts import render
-# import pymongo
-# from .MongoDBConfig import MongoDB
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.viewsets import ViewSet
+from .serializer import UploadSerializer
+import pymongo
+# from utils.MongoDBConfig import MongoDB
+
 
 # client = MongoDB('mongodb+srv://username:password@HOSTNAME/DATABASE_NAME?authSource=admin&tls=true&tlsCAFile=<PATH_TO_CA_FILE>')
 
