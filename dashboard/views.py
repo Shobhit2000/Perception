@@ -1,132 +1,204 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .serializer import DashboardSerializer
-from .models import Dashboard
+import pymongo
+from .utils import dashboard_mongo
+from django.http import HttpResponse
+
+import logging
+# from utils.MongoDBConfig import MongoDB
+
+
+# client = MongoDB('mongodb+srv://username:password@HOSTNAME/DATABASE_NAME?authSource=admin&tls=true&tlsCAFile=<PATH_TO_CA_FILE>')
 
 @api_view(['POST'])
 def create_dashboard(request):
-    """
-    Endpoint to create a dashboard
-
-    Returns:
-        json: json response stating whether the data was inserted or if there was an error
-    """
     try:
-        dashboard = Dashboard.objects.filter(id=request.data.get('user_id'), 
-                                             name=request.data.get('name')).first()
-        if dashboard:
-            return Response('Dashboard with the same name already exists, please provide another name', status=status.HTTP_409_CONFLICT)
+        record = request.json['newRecord']
         
-        serializer = DashboardSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            raise Exception(serializer.errors)
+        # Call DatabaseOPs function to insert new chat
+        inserted_object = dashboard_mongo.add_dashboard(record)
+
+        logging.info('Record Inserted !!')
+        response = str(inserted_object)
 
     except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        response = 'Insert failed with error:- ' + str(e)
+        logging.error(response)
     
-
-@api_view(['GET'])
-def find_dashboard(request):
-    """
-    Endpoint to find a Dashboard
-
-    Returns:
-        json: json response stating whether the User was found or if there was an error
-    """
-    try:
-        dashboard = Dashboard.objects.filter(id=request.data.get('id')).first()
-
-        if dashboard:
-            serializer = DashboardSerializer(dashboard)
-            return Response(serializer.data)
-        else:
-            raise Exception('No Dashboard with this name found')
-
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+    return HttpResponse({"response":response})
 
 
-@api_view(['GET'])
-def find_all_dashboards(request):
-    """
-    Endpoint to find all Dashboards for a user_id
+# @api_view(['PUT'])
+# def update_dashboard(request):
 
-    Returns:
-        json: json response stating whether the dashboard was found or if there was an error
-    """
-    try:
-        dashboards = Dashboard.objects.filter(user_id=request.data.get('user_id'))
-        serializer = DashboardSerializer(dashboards, many=True)
-        return Response(serializer.data)
 
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+# @api_view(['DELETE'])
+# def delete_dashboard(request):
+
+
+
+# @api_view(['GET'])
+# def get_dashboard(request):
+
+
+
+
+# @chats_bp.route('/addNewChat', methods=['POST'])
+# def addNewChat():
+#     """
+#     Endpoint to add a new Chat in MongoDB
+
+#     Returns:
+#         json: json response stating whether the data was inserted or if there was an error
+#     """
     
-
-@api_view(['DELETE'])
-def delete_dashboard(request):
-    """
-    Endpoint to delete a Dashboard
-
-    Returns:
-        json: json response stating whether the User was deleted or if there was an error
-    """
-    try:
-        dashboard = Dashboard.objects.filter(id=request.data.get('id')).first()
-        if dashboard:
-            dashboard.delete()
-            return Response('Dashboard Deleted Successfully', status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise Exception('No Dashboard found to delete')
-
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)    
-
-
-@api_view(['DELETE'])
-def delete_all_dashboards(request):
-    """
-    Endpoint to delete all Dashboards for a User
-
-    Returns:
-        json: json response stating whether the User was deleted or if there was an error
-    """
-    try:
-        dashboards = Dashboard.objects.filter(user_id=request.data.get('user_id'))
-        if dashboards:
-            dashboards.delete()
-            return Response('Dashboard Deleted Successfully', status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise Exception('No Dashboards found for this user to delete')
-
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)   
-
-
-@api_view(['PUT'])
-def update_dashboard(request):
-    """
-    Endpoint to Update an existing Dashboard
-
-    Returns:
-        json: json response stating whether the User was updated or if there was an error
-    """
-    try:
-        dashboard = Dashboard.objects.filter(id=request.data.get('id')).first()
+#     try:
+#         newRecord = request.json['newRecord']
+#         mongoDB = current_app.config['mongoDB']
         
-        if dashboard:
-            serializer = DashboardSerializer(dashboard, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                raise Exception(serializer.errors)
-        else:
-            raise Exception('No Dashboard found to be updated')
+#         # Call DatabaseOPs function to insert new chat
+#         insertedObject = Chats.addNewChat(newRecord, mongoDB)
+
+#         logging.info('Record Inserted !!')
+#         response = str(insertedObject)
+
+#     except Exception as e:
+#         response = 'Insert failed with error:- ' + str(e)
+#         logging.error(response)
     
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+#     return jsonify({"response":response})
+
+
+# @chats_bp.route('/deleteChat', methods=['POST'])
+# def deleteChat():
+#     """
+#     Endpoint to delete a single Chat in MongoDB
+
+#     Returns:
+#         json: json response stating whether a single Chat was deleted or if there was an error
+#     """
+
+#     try:
+#         chatIdToBeDeleted = ObjectId(request.json['chatIdToBeDeleted'])
+#         mongoDB = current_app.config['mongoDB']
+
+#         # Call DatabaseOPs function to delete a chat
+#         response = Chats.deleteChat(chatIdToBeDeleted, mongoDB)
+#         logging.info('Record Deleted !!')
+    
+#     except Exception as e:
+#         response = 'Delete failed with error:- ' + str(e)
+#         logging.error(response)
+    
+#     return jsonify({"response":response})
+
+
+# @chats_bp.route('/deleteAllChats', methods=['POST'])
+# def deleteAllChats():
+#     """
+#     Endpoint to delete all Chats in MongoDB
+
+#     Returns:
+#         json: json response stating whether all Chats were deleted or if there was an error
+#     """
+
+#     try:
+#         userEmail = request.json['userEmail']
+#         mongoDB = current_app.config['mongoDB']
+        
+#         # Call DatabaseOPs function to delete all chats of a user
+#         response = Chats.deleteAllChats(userEmail, mongoDB)
+#         logging.info('All Chat Records Deleted !!')
+    
+#     except Exception as e:
+#         response = 'Delete all failed with error:- ' + str(e)
+#         logging.error(response)
+    
+#     return jsonify({"response":response})
+
+# @chats_bp.route('/updateChat', methods=['PUT'])
+# def updateChat():
+#     """
+#     Endpoint to update a single Chat in MongoDB
+
+#     Returns:
+#         json: json response stating whether a single Chat was updated or if there was an error
+#     """
+
+#     try:
+#         req = request.json
+#         chatIdToBeUpdated = ObjectId(req['chatIdToBeUpdated'])
+#         updatedRecord = req['updatedRecord']
+#         mongoDB = current_app.config['mongoDB']
+
+#         # Call DatabaseOPs function to update a chatline
+#         response = Chats.updateChats(chatIdToBeUpdated, updatedRecord, mongoDB)
+#         logging.info('Record Updated !!')
+    
+#     except Exception as e:
+#         response = 'Update failed with error:- %s', str(e)
+#         logging.error(response)
+    
+#     return jsonify({"response":response})
+
+
+# @chats_bp.route('/findChat', methods=['GET'])
+# def findExistingChat():
+#     """
+#     Endpoint to find an Chat in MongoDB
+
+#     Returns:
+#         json: json response stating whether a single Chat was found or if there was an error
+#     """
+
+#     try:
+#         chatIdToBeSearched = ObjectId(request.json['chatIdToBeSearched'])
+#         mongoDB = current_app.config['mongoDB']
+
+#         record = Chats.findExistingChat(chatIdToBeSearched, mongoDB)
+#         record['_id'] = str(record['_id'])
+        
+#         logging.info('Record Found with details:- %s', str(record))
+#         response = record
+    
+#     except Exception as e:
+#         response = 'Finding Record failed with error:- ' + str(e)
+#         logging.error(response)
+    
+#     return jsonify({"response":response})
+
+
+# @chats_bp.route('/findAllChats', methods=['GET'])
+# def findAllExistingChats():
+#     """
+#     Endpoint to find all Chats in MongoDB using email_id
+
+#     Returns:
+#         json: json response stating whether all Chats were found or if there was an error
+#     """
+
+#     try:
+#         userEmail = request.json['userEmail']
+#         mongoDB = current_app.config['mongoDB']
+        
+#         # Call DatabaseOPs function to delete all chatlines in a chatId
+#         records = Chats.findAllExistingChats(userEmail, mongoDB)
+
+#         for record in records:
+#             record['_id'] = str(record['_id'])
+
+#         logging.info('Record Found with details:- %s', str(records))
+#         response = records
+    
+#     except Exception as e:
+#         response = 'Finding Records failed with error:- ' + str(e)
+#         logging.error(response)
+    
+#     return jsonify({"response":response})
+
+
+# # def closeMongoCLient(self):
+# #     mongoDB.client.close()
+# #     logging.info('Mongo client closed')
