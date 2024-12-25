@@ -6,10 +6,10 @@ from .utils import dashboard_mongo
 from django.http import HttpResponse
 
 import logging
-# from utils.MongoDBConfig import MongoDB
+from .utils.MongoDBConfig import MongoDB
 
 
-# client = MongoDB('mongodb+srv://username:password@HOSTNAME/DATABASE_NAME?authSource=admin&tls=true&tlsCAFile=<PATH_TO_CA_FILE>')
+client = MongoDB()
 
 @api_view(['POST'])
 def create_dashboard(request):

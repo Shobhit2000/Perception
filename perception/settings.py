@@ -41,8 +41,7 @@ INSTALLED_APPS = [
     'user',
     'chats',
     'chatlines',
-    'dashboard',
-    'widget'
+    'dashboard'
 ]
 
 MIDDLEWARE = [
