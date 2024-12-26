@@ -14,19 +14,22 @@ client = MongoDB()
 @api_view(['POST'])
 def create_dashboard(request):
     try:
-        record = request.json['newRecord']
+        record = request.data
         
         # Call DatabaseOPs function to insert new chat
-        inserted_object = dashboard_mongo.add_dashboard(record)
+        inserted_object = dashboard_mongo.add_dashboard(record, client)
 
         logging.info('Record Inserted !!')
-        response = str(inserted_object)
+        # response = str(inserted_object)
+        
+        return HttpResponse({"response":inserted_object})
 
     except Exception as e:
         response = 'Insert failed with error:- ' + str(e)
         logging.error(response)
-    
-    return HttpResponse({"response":response})
+
+        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+   
 
 
 # @api_view(['PUT'])
@@ -42,6 +45,30 @@ def create_dashboard(request):
 # @api_view(['GET'])
 # def get_dashboard(request):
 
+
+@api_view(['GET'])
+def find_all_dashboards(request):
+    """
+    Endpoint to find all dashboards in MongoDB using user_id
+
+    Returns:
+        json: json response stating whether all Chats were found or if there was an error
+    """
+
+    try:
+        user_id = request.data.get('user_id')
+        
+        # Call DatabaseOPs function to delete all chatlines in a chatId
+        records = dashboard_mongo.find_all_dashboard(user_id, client)
+
+        logging.info('Record Found with details:- %s', str(records))
+        response = records
+    
+    except Exception as e:
+        response = 'Finding Records failed with error:- ' + str(e)
+        logging.error(response)
+    
+    return HttpResponse({"response": response})
 
 
 

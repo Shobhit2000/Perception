@@ -1,5 +1,50 @@
 import logging
 
+
+def widget_reverse_mapper(record, mongoDB):
+    # Define all possible fields for a widget
+    widget_fields = [
+        'file_id', 'widget_name', 'colour', 'graph_type', 'query',
+        'center_x', 'center_y', 'height', 'width', 'data'
+    ]
+    
+    # Start with _id and copy only existing fields
+    widget_record = {
+        '_id': record.get('_id'),
+        **{k: record[k] for k in widget_fields if k in record}
+    }
+    
+    return widget_record
+
+def dashboard_reverse_mapper(record, mongoDB):
+    """Maps DB entry to dashboard record.
+
+    Args:
+        record: DB entry
+        mongoDB: MongoDB connection object
+
+    Returns:
+        Dictionary with mapped dashboard data
+    """
+    # Define all possible fields for a dashboard
+    dashboard_fields = [
+        'dashboard_name', 'user_id', 'colour', 'refresh_time',
+        'creation_tms', 'last_update_tms'
+    ]
+    
+    # Start with _id and copy only existing fields
+    dashboard_record = {
+        '_id': record.get('_id'),
+        **{k: record[k] for k in dashboard_fields if k in record}
+    }
+    
+    # Handle widgets separately since they need mapping
+    if 'widgets' in record:
+        dashboard_record['widgets'] = [widget_reverse_mapper(w, mongoDB) for w in record['widgets']]
+    
+    logging.info('Mapped Record object !!')
+    return dashboard_record
+
 def widget_mapper(record, mongoDB):
     widget_record = {}
 
@@ -98,7 +143,7 @@ def add_dashboard(record, mongoDB):
         record = dashboard_mapper(record, mongoDB)
 
         # if user exists with provided email Raise Exception
-        inserted_object = mongoDB.usersCollection.insert_one(record)
+        inserted_object = mongoDB.dashboardsCollection.insert_one(record)
         
         response = inserted_object.inserted_id
         logging.info('Record Inserted !!')
@@ -175,10 +220,21 @@ def find_all_dashboard(user_id, mongoDB):
     """
     
     try:
-        record = mongoDB.dashboardsCollection.find_one({'user_id': user_id})
-    
-        response = record
-        logging.info('Record Found with details:- %s', str(record))
+        record = mongoDB.dashboardsCollection.find({'user_id': user_id}).sort([('last_update_tms',-1)])
+        response = []
+
+        for dashboard in response:
+            dashboard['_id'] = str(dashboard['_id'])
+            response.append(dashboard)
+
+            if dashboard.get('widgets'):
+                temp = []
+                for i in dashboard.get('widgets'):
+                    i['_id'] = str(i['_id'])
+                    temp.append(i)
+                dashboard['widgets'] = temp
+
+        print('Record Found with details: ', str(response))
         return response
     
     except Exception as e:
