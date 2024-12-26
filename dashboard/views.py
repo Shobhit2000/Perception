@@ -21,8 +21,9 @@ def create_dashboard(request):
 
         logging.info('Record Inserted !!')
         # response = str(inserted_object)
+        response = {'response': inserted_object}
         
-        return HttpResponse({"response":inserted_object})
+        return Response(response)
 
     except Exception as e:
         response = 'Insert failed with error:- ' + str(e)
@@ -41,9 +42,29 @@ def create_dashboard(request):
 # def delete_dashboard(request):
 
 
+@api_view(['GET'])
+def find_dashboard(request):
+    """
+    Endpoint to find a dashboard in MongoDB
 
-# @api_view(['GET'])
-# def get_dashboard(request):
+    Returns:
+        json: json response stating whether the dashboard was found or if there was an error
+    """
+
+    try:
+        dashboard_id = request.data.get('id')
+
+        record = dashboard_mongo.find_dashboard(dashboard_id, client)
+        
+        logging.info('Record Found with details:- %s', str(record))
+        response = {"response": record}
+    
+    except Exception as e:
+        response = 'Finding Record failed with error:- ' + str(e)
+        logging.error(response)
+    
+    return Response(response)
+
 
 
 @api_view(['GET'])
@@ -62,13 +83,13 @@ def find_all_dashboards(request):
         records = dashboard_mongo.find_all_dashboard(user_id, client)
 
         logging.info('Record Found with details:- %s', str(records))
-        response = records
+        response = {'response': records}
     
     except Exception as e:
         response = 'Finding Records failed with error:- ' + str(e)
         logging.error(response)
     
-    return HttpResponse({"response": response})
+    return Response(response)
 
 
 

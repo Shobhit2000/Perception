@@ -1,4 +1,5 @@
 import logging
+from bson import ObjectId
 
 
 def widget_reverse_mapper(record, mongoDB):
@@ -145,7 +146,7 @@ def add_dashboard(record, mongoDB):
         # if user exists with provided email Raise Exception
         inserted_object = mongoDB.dashboardsCollection.insert_one(record)
         
-        response = inserted_object.inserted_id
+        response = str(inserted_object.inserted_id)
         logging.info('Record Inserted !!')
         return response
     
@@ -206,6 +207,36 @@ def update_dashboard(dashboard_id, updated_record, mongoDB):
         logging.error(response)
         raise Exception(response)
 
+def find_dashboard(id, mongoDB):
+    """
+    Function to find a dashboards given its id
+
+    Args:
+        id (String): id of the dashboard to be searched
+        mongoDB (object): mongo client for performing database operations
+
+    Returns:
+        response(dict): dictionary if a record is found else error msg
+    """
+    
+    try:
+        record = mongoDB.dashboardsCollection.find_one({'_id': ObjectId(id)})
+        response = record
+
+        response['_id'] = str(response['_id'])
+
+        if response.get('widgets'):
+            for i in response.get('widgets'):
+                i['_id'] = str(i['_id'])
+
+        print('Record Found with details: %s', str(response))
+        return response
+    
+    except Exception as e:
+        response = 'Finding Record failed with error:- ' + str(e)
+        logging.error(response)
+        raise Exception(response)
+
 
 def find_all_dashboard(user_id, mongoDB):
     """
@@ -220,21 +251,17 @@ def find_all_dashboard(user_id, mongoDB):
     """
     
     try:
-        record = mongoDB.dashboardsCollection.find({'user_id': user_id}).sort([('last_update_tms',-1)])
-        response = []
+        record = list(mongoDB.dashboardsCollection.find({'user_id': user_id}).sort([('last_update_tms',-1)]))
+        response = record
 
         for dashboard in response:
             dashboard['_id'] = str(dashboard['_id'])
-            response.append(dashboard)
 
             if dashboard.get('widgets'):
-                temp = []
                 for i in dashboard.get('widgets'):
                     i['_id'] = str(i['_id'])
-                    temp.append(i)
-                dashboard['widgets'] = temp
 
-        print('Record Found with details: ', str(response))
+        logging.info('Record Found with details: %s', str(response))
         return response
     
     except Exception as e:
