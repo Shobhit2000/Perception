@@ -30,11 +30,32 @@ def create_dashboard(request):
         logging.error(response)
 
         return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-   
 
 
-# @api_view(['PUT'])
-# def update_dashboard(request):
+@api_view(['PUT'])
+def update_dashboard(request):
+    """
+    Endpoint to update a single dashboard in MongoDB
+
+    Returns:
+        json: json response stating whether a single dashboard was updated or if there was an error
+    """
+
+    try:
+        updated_record = request.data
+        dashboard_id = request.data.get('id')
+
+        # Call DatabaseOPs function to update a chatline
+        record = dashboard_mongo.update_dashboard(dashboard_id, updated_record, client)
+        logging.info('Record Updated !!')
+        
+        response = {"response": record}
+    
+    except Exception as e:
+        response = 'Update failed with error:- %s', str(e)
+        logging.error(response)
+    
+    return Response(response)
 
 
 @api_view(['DELETE'])

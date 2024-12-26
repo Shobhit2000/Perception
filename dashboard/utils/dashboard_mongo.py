@@ -174,9 +174,10 @@ def update_dashboard(dashboard_id, updated_record, mongoDB):
 
     try:
         updated_record = dashboard_mapper(updated_record, mongoDB)
-        mongoDB.dashboardsCollection.update_one({'_id' : dashboard_id}, {"$set": updated_record}, upsert=False)
+        updated_record['_id'] = ObjectId(dashboard_id)
+        record = mongoDB.dashboardsCollection.update_one({'_id' : updated_record['_id'] }, {"$set": updated_record}, upsert=False)
         
-        response = 'Record Updated !!'
+        response = '{0} records found and {1} records updated !!'.format(record.matched_count,  record.modified_count)
         logging.info(response)
         return response
     
