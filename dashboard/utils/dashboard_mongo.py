@@ -1,51 +1,6 @@
 import logging
 from bson import ObjectId
 
-
-def widget_reverse_mapper(record, mongoDB):
-    # Define all possible fields for a widget
-    widget_fields = [
-        'file_id', 'widget_name', 'colour', 'graph_type', 'query',
-        'center_x', 'center_y', 'height', 'width', 'data'
-    ]
-    
-    # Start with _id and copy only existing fields
-    widget_record = {
-        '_id': record.get('_id'),
-        **{k: record[k] for k in widget_fields if k in record}
-    }
-    
-    return widget_record
-
-def dashboard_reverse_mapper(record, mongoDB):
-    """Maps DB entry to dashboard record.
-
-    Args:
-        record: DB entry
-        mongoDB: MongoDB connection object
-
-    Returns:
-        Dictionary with mapped dashboard data
-    """
-    # Define all possible fields for a dashboard
-    dashboard_fields = [
-        'dashboard_name', 'user_id', 'colour', 'refresh_time',
-        'creation_tms', 'last_update_tms'
-    ]
-    
-    # Start with _id and copy only existing fields
-    dashboard_record = {
-        '_id': record.get('_id'),
-        **{k: record[k] for k in dashboard_fields if k in record}
-    }
-    
-    # Handle widgets separately since they need mapping
-    if 'widgets' in record:
-        dashboard_record['widgets'] = [widget_reverse_mapper(w, mongoDB) for w in record['widgets']]
-    
-    logging.info('Mapped Record object !!')
-    return dashboard_record
-
 def widget_mapper(record, mongoDB):
     widget_record = {}
 
@@ -155,7 +110,6 @@ def add_dashboard(record, mongoDB):
         logging.error(response)
         raise Exception(response)
 
-
 def delete_dashboard(dashboard_id, mongoDB):
     """
     Function to delete a dashboard
@@ -169,9 +123,9 @@ def delete_dashboard(dashboard_id, mongoDB):
     """
 
     try:
-        mongoDB.dashboardsCollection.delete_one({'_id' : dashboard_id})
+        record  = mongoDB.dashboardsCollection.delete_one({'_id' : ObjectId(dashboard_id)})
         
-        response = "Record Deleted !!"
+        response = "{0} record for {1} Deleted !!".format(record.deleted_count ,dashboard_id )
         logging.info(response)
         return response
     
@@ -180,7 +134,31 @@ def delete_dashboard(dashboard_id, mongoDB):
         logging.error(response)
         raise Exception(response)
 
+def delete_all_dashboards(user_id, mongoDB):
+    """
+    Function to delete all dashboard for a given user
 
+    Args:
+        dashboard_id (String): dashboard_id to be deleted
+        mongoDB (object): mongo client for performing database operations
+
+    Returns:
+        response(String): Msg stating whether the user was deleted or if there was an error
+    """
+
+    try:
+        record = mongoDB.dashboardsCollection.delete_many({'user_id' : user_id})
+        num = record.deleted_count
+        
+        response = "{0} records for user {1} Deleted !!".format(num, user_id)
+        logging.info(response)
+        return response
+    
+    except Exception as e:
+        response = 'Delete failed with error:- ' + str(e)
+        logging.error(response)
+        raise Exception(response)
+    
 def update_dashboard(dashboard_id, updated_record, mongoDB):
     """
     Function to update a dashboard
@@ -236,7 +214,6 @@ def find_dashboard(id, mongoDB):
         response = 'Finding Record failed with error:- ' + str(e)
         logging.error(response)
         raise Exception(response)
-
 
 def find_all_dashboard(user_id, mongoDB):
     """

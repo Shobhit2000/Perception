@@ -37,10 +37,52 @@ def create_dashboard(request):
 # def update_dashboard(request):
 
 
+@api_view(['DELETE'])
+def delete_dashboard(request):
+    """
+    Endpoint to delete a single dashboard in MongoDB
 
-# @api_view(['DELETE'])
-# def delete_dashboard(request):
+    Returns:
+        json: json response stating whether a single dashboard was deleted or if there was an error
+    """
 
+    try:
+        dashboard_id = request.data.get('id')
+
+        # Call DatabaseOPs function to delete a chat
+        record = dashboard_mongo.delete_dashboard(dashboard_id, client)
+        logging.info('Record Deleted !!')
+        
+        response = {"response": record}
+    
+    except Exception as e:
+        response = 'Delete failed with error:- ' + str(e)
+        logging.error(response)
+    
+    return Response(response)
+
+@api_view(['DELETE'])
+def delete_all_dashboards(request):
+    """
+    Endpoint to delete all dashboards in MongoDB for a given user
+
+    Returns:
+        json: json response stating whether all dashboards were deleted or if there was an error
+    """
+
+    try:
+        user_id = request.data.get('user_id')
+        
+        # Call DatabaseOPs function to delete all chats of a user
+        record = dashboard_mongo.delete_all_dashboards(user_id, client)
+        logging.info('All Chat Records Deleted !!')
+        response = {"response": record}
+    
+    except Exception as e:
+        response = 'Delete all failed with error:- ' + str(e)
+        logging.error(response)
+    
+    return Response(response)
 
 @api_view(['GET'])
 def find_dashboard(request):
