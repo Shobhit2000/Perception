@@ -1,4 +1,5 @@
 import logging
+from bson import ObjectId
 
 def widget_mapper(record, mongoDB):
     widget_record = {}
@@ -98,9 +99,9 @@ def add_dashboard(record, mongoDB):
         record = dashboard_mapper(record, mongoDB)
 
         # if user exists with provided email Raise Exception
-        inserted_object = mongoDB.usersCollection.insert_one(record)
+        inserted_object = mongoDB.dashboardsCollection.insert_one(record)
         
-        response = inserted_object.inserted_id
+        response = str(inserted_object.inserted_id)
         logging.info('Record Inserted !!')
         return response
     
@@ -108,7 +109,6 @@ def add_dashboard(record, mongoDB):
         response = 'Insert failed with error:- ' + str(e)
         logging.error(response)
         raise Exception(response)
-
 
 def delete_dashboard(dashboard_id, mongoDB):
     """
@@ -123,9 +123,9 @@ def delete_dashboard(dashboard_id, mongoDB):
     """
 
     try:
-        mongoDB.dashboardsCollection.delete_one({'_id' : dashboard_id})
+        record  = mongoDB.dashboardsCollection.delete_one({'_id' : ObjectId(dashboard_id)})
         
-        response = "Record Deleted !!"
+        response = "{0} record for {1} Deleted !!".format(record.deleted_count ,dashboard_id )
         logging.info(response)
         return response
     
@@ -134,7 +134,31 @@ def delete_dashboard(dashboard_id, mongoDB):
         logging.error(response)
         raise Exception(response)
 
+def delete_all_dashboards(user_id, mongoDB):
+    """
+    Function to delete all dashboard for a given user
 
+    Args:
+        dashboard_id (String): dashboard_id to be deleted
+        mongoDB (object): mongo client for performing database operations
+
+    Returns:
+        response(String): Msg stating whether the user was deleted or if there was an error
+    """
+
+    try:
+        record = mongoDB.dashboardsCollection.delete_many({'user_id' : user_id})
+        num = record.deleted_count
+        
+        response = "{0} records for user {1} Deleted !!".format(num, user_id)
+        logging.info(response)
+        return response
+    
+    except Exception as e:
+        response = 'Delete failed with error:- ' + str(e)
+        logging.error(response)
+        raise Exception(response)
+    
 def update_dashboard(dashboard_id, updated_record, mongoDB):
     """
     Function to update a dashboard
@@ -150,9 +174,10 @@ def update_dashboard(dashboard_id, updated_record, mongoDB):
 
     try:
         updated_record = dashboard_mapper(updated_record, mongoDB)
-        mongoDB.dashboardsCollection.update_one({'_id' : dashboard_id}, {"$set": updated_record}, upsert=False)
+        updated_record['_id'] = ObjectId(dashboard_id)
+        record = mongoDB.dashboardsCollection.update_one({'_id' : updated_record['_id'] }, {"$set": updated_record}, upsert=False)
         
-        response = 'Record Updated !!'
+        response = '{0} records found and {1} records updated !!'.format(record.matched_count,  record.modified_count)
         logging.info(response)
         return response
     
@@ -161,6 +186,35 @@ def update_dashboard(dashboard_id, updated_record, mongoDB):
         logging.error(response)
         raise Exception(response)
 
+def find_dashboard(id, mongoDB):
+    """
+    Function to find a dashboards given its id
+
+    Args:
+        id (String): id of the dashboard to be searched
+        mongoDB (object): mongo client for performing database operations
+
+    Returns:
+        response(dict): dictionary if a record is found else error msg
+    """
+    
+    try:
+        record = mongoDB.dashboardsCollection.find_one({'_id': ObjectId(id)})
+        response = record
+
+        response['_id'] = str(response['_id'])
+
+        if response.get('widgets'):
+            for i in response.get('widgets'):
+                i['_id'] = str(i['_id'])
+
+        print('Record Found with details: %s', str(response))
+        return response
+    
+    except Exception as e:
+        response = 'Finding Record failed with error:- ' + str(e)
+        logging.error(response)
+        raise Exception(response)
 
 def find_all_dashboard(user_id, mongoDB):
     """
@@ -175,10 +229,17 @@ def find_all_dashboard(user_id, mongoDB):
     """
     
     try:
-        record = mongoDB.dashboardsCollection.find_one({'user_id': user_id})
-    
+        record = list(mongoDB.dashboardsCollection.find({'user_id': user_id}).sort([('last_update_tms',-1)]))
         response = record
-        logging.info('Record Found with details:- %s', str(record))
+
+        for dashboard in response:
+            dashboard['_id'] = str(dashboard['_id'])
+
+            if dashboard.get('widgets'):
+                for i in dashboard.get('widgets'):
+                    i['_id'] = str(i['_id'])
+
+        logging.info('Record Found with details: %s', str(response))
         return response
     
     except Exception as e:

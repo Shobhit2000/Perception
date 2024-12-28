@@ -18,7 +18,7 @@ class MongoDB():
         # Create a new client and connect to the server
         self.client = MongoClient(self.mongoURI)
         self.db = self.client["perception"]
-        self.usersCollection = self.db["dashboard"]
+        self.dashboardsCollection = self.db["dashboard"]
 
         self.generateMongoObjID = GenerateMongoObjID()
 

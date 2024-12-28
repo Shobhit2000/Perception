@@ -14,34 +14,145 @@ client = MongoDB()
 @api_view(['POST'])
 def create_dashboard(request):
     try:
-        record = request.json['newRecord']
+        record = request.data
         
         # Call DatabaseOPs function to insert new chat
-        inserted_object = dashboard_mongo.add_dashboard(record)
+        inserted_object = dashboard_mongo.add_dashboard(record, client)
 
         logging.info('Record Inserted !!')
-        response = str(inserted_object)
+        # response = str(inserted_object)
+        response = {'response': inserted_object}
+        
+        return Response(response)
 
     except Exception as e:
         response = 'Insert failed with error:- ' + str(e)
         logging.error(response)
+
+        return Response({"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+
+@api_view(['PUT'])
+def update_dashboard(request):
+    """
+    Endpoint to update a single dashboard in MongoDB
+
+    Returns:
+        json: json response stating whether a single dashboard was updated or if there was an error
+    """
+
+    try:
+        updated_record = request.data
+        dashboard_id = request.data.get('id')
+
+        # Call DatabaseOPs function to update a chatline
+        record = dashboard_mongo.update_dashboard(dashboard_id, updated_record, client)
+        logging.info('Record Updated !!')
+        
+        response = {"response": record}
     
-    return HttpResponse({"response":response})
+    except Exception as e:
+        response = 'Update failed with error:- %s', str(e)
+        logging.error(response)
+    
+    return Response(response)
 
 
-# @api_view(['PUT'])
-# def update_dashboard(request):
+@api_view(['DELETE'])
+def delete_dashboard(request):
+    """
+    Endpoint to delete a single dashboard in MongoDB
+
+    Returns:
+        json: json response stating whether a single dashboard was deleted or if there was an error
+    """
+
+    try:
+        dashboard_id = request.data.get('id')
+
+        # Call DatabaseOPs function to delete a chat
+        record = dashboard_mongo.delete_dashboard(dashboard_id, client)
+        logging.info('Record Deleted !!')
+        
+        response = {"response": record}
+    
+    except Exception as e:
+        response = 'Delete failed with error:- ' + str(e)
+        logging.error(response)
+    
+    return Response(response)
+
+@api_view(['DELETE'])
+def delete_all_dashboards(request):
+    """
+    Endpoint to delete all dashboards in MongoDB for a given user
+
+    Returns:
+        json: json response stating whether all dashboards were deleted or if there was an error
+    """
+
+    try:
+        user_id = request.data.get('user_id')
+        
+        # Call DatabaseOPs function to delete all chats of a user
+        record = dashboard_mongo.delete_all_dashboards(user_id, client)
+        logging.info('All Chat Records Deleted !!')
+        response = {"response": record}
+    
+    except Exception as e:
+        response = 'Delete all failed with error:- ' + str(e)
+        logging.error(response)
+    
+    return Response(response)
+
+@api_view(['GET'])
+def find_dashboard(request):
+    """
+    Endpoint to find a dashboard in MongoDB
+
+    Returns:
+        json: json response stating whether the dashboard was found or if there was an error
+    """
+
+    try:
+        dashboard_id = request.data.get('id')
+
+        record = dashboard_mongo.find_dashboard(dashboard_id, client)
+        
+        logging.info('Record Found with details:- %s', str(record))
+        response = {"response": record}
+    
+    except Exception as e:
+        response = 'Finding Record failed with error:- ' + str(e)
+        logging.error(response)
+    
+    return Response(response)
 
 
 
-# @api_view(['DELETE'])
-# def delete_dashboard(request):
+@api_view(['GET'])
+def find_all_dashboards(request):
+    """
+    Endpoint to find all dashboards in MongoDB using user_id
 
+    Returns:
+        json: json response stating whether all Chats were found or if there was an error
+    """
 
+    try:
+        user_id = request.data.get('user_id')
+        
+        # Call DatabaseOPs function to delete all chatlines in a chatId
+        records = dashboard_mongo.find_all_dashboard(user_id, client)
 
-# @api_view(['GET'])
-# def get_dashboard(request):
-
+        logging.info('Record Found with details:- %s', str(records))
+        response = {'response': records}
+    
+    except Exception as e:
+        response = 'Finding Records failed with error:- ' + str(e)
+        logging.error(response)
+    
+    return Response(response)
 
 
 
